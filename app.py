@@ -11,11 +11,19 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 # Variable global para almacenar los datos del archivo cargado
 data = None
 
+# Definir intervalos de horas
+time_intervals = {
+    "Madrugada (00:00-06:00)": (0, 6),
+    "Mañana (06:00-12:00)": (6, 12),
+    "Tarde (12:00-18:00)": (12, 18),
+    "Noche (18:00-24:00)": (18, 24)
+}
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     global data
     barrios = []
-
+    
     if request.method == 'POST':
         # Procesar el archivo cargado
         file = request.files['file']
@@ -25,18 +33,19 @@ def index():
             
             # Leer y almacenar el archivo en la variable global `data`
             data = pd.read_csv(filepath)
+            data['hora'] = pd.to_datetime(data['hora'], format='%I:%M %p').dt.hour  # Convertir horas a formato de 24 horas
             
             # Obtener la lista de barrios únicos
             barrios = sorted(data['barrio'].dropna().unique())
             
             # Generar el mapa de calor para toda la ciudad
-            heatmap_path = generate_heatmap(data)
+            generate_heatmap(data, "heatmap.html")
             
             # Renderizar la página con el mapa de calor de toda la ciudad y la lista de barrios
-            return render_template('index.html', barrios=barrios, heatmap=True)
+            return render_template('index.html', barrios=barrios, time_intervals=time_intervals.keys(), heatmap=True)
     
     # Renderizar la página inicial
-    return render_template('index.html', barrios=barrios, heatmap=False)
+    return render_template('index.html', barrios=barrios, time_intervals=time_intervals.keys(), heatmap=False)
 
 @app.route('/filter', methods=['POST'])
 def filter_heatmap():
@@ -44,23 +53,30 @@ def filter_heatmap():
     if data is None:
         return redirect(url_for('index'))
     
-    # Obtener el barrio seleccionado
+    # Obtener el barrio y el intervalo de horas seleccionados
     selected_barrio = request.form.get('barrio')
+    selected_time_interval = request.form.get('time_interval')
     
-    # Filtrar los datos para el barrio seleccionado o mostrar toda la ciudad si no se selecciona ningún barrio
+    # Filtrar por barrio
     if selected_barrio and selected_barrio != 'todos':
         data_filtered = data[data['barrio'] == selected_barrio]
     else:
         data_filtered = data
     
-    # Generar el mapa de calor filtrado
-    generate_heatmap(data_filtered)
+    # Filtrar por intervalo de horas
+    if selected_time_interval:
+        start_hour, end_hour = time_intervals[selected_time_interval]
+        data_filtered = data_filtered[(data_filtered['hora'] >= start_hour) & (data_filtered['hora'] < end_hour)]
     
-    # Renderizar la página con el mapa embebido y el filtro de barrios
+    # Generar el mapa de calor filtrado
+    generate_heatmap(data_filtered, "heatmap.html")
+    
+    # Actualizar la lista de barrios y el título dinámico
     barrios = sorted(data['barrio'].dropna().unique())
-    return render_template('index.html', barrios=barrios, heatmap=True)
+    title = f"Mapa de Calor de Accidentes - {selected_barrio if selected_barrio != 'todos' else 'Todos los Barrios'} - {selected_time_interval}"
+    return render_template('index.html', barrios=barrios, time_intervals=time_intervals.keys(), heatmap=True, title=title, selected_barrio=selected_barrio, selected_time_interval=selected_time_interval)
 
-def generate_heatmap(dataframe):
+def generate_heatmap(dataframe, filename):
     # Filtrar las coordenadas y crear el mapa de calor
     data_filtered = dataframe[['longitud', 'latitud']].dropna()
     
@@ -70,9 +86,8 @@ def generate_heatmap(dataframe):
     HeatMap(heat_data).add_to(mapa_medellin)
     
     # Guardar el mapa en un archivo HTML para incrustarlo en la página
-    heatmap_path = os.path.join(app.config['UPLOAD_FOLDER'], 'heatmap.html')
+    heatmap_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     mapa_medellin.save(heatmap_path)
-    return heatmap_path
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):

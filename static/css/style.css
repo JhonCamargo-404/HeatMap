@@ -1,0 +1,81 @@
+/* Estilos generales */
+body { 
+    font-family: Arial, sans-serif; 
+    background-color: #f4f4f9; 
+    color: #333; 
+    text-align: center; 
+    margin: 0; 
+    padding: 0; 
+}
+
+.container { 
+    max-width: 900px; 
+    margin: 40px auto; 
+    padding: 20px; 
+    background-color: #fff; 
+    border-radius: 10px; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+}
+
+h1 { 
+    color: #0057b7; 
+    font-size: 1.8em; 
+    margin-bottom: 30px; 
+}
+
+/* Formulario de carga de archivo */
+form {
+    margin-bottom: 20px;
+}
+
+input[type="file"] {
+    margin-top: 10px;
+    margin-bottom: 15px;
+    padding: 8px;
+    font-size: 1em;
+}
+
+button { 
+    padding: 10px 20px; 
+    background-color: #0057b7; 
+    color: #fff; 
+    border: none; 
+    border-radius: 5px; 
+    font-size: 1em; 
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover { 
+    background-color: #004494; 
+}
+
+/* Estilos para el selector de barrio y jornada */
+select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+    margin-left: 10px;
+}
+
+label {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Contenedor del iframe del mapa */
+iframe { 
+    width: 100%; 
+    height: 600px; 
+    border: 2px solid #ddd; 
+    margin-top: 20px; 
+    border-radius: 10px; 
+}
+
+/* Estilo para alertas o mensajes dinámicos */
+.message {
+    font-size: 1.1em;
+    margin-top: 20px;
+    color: #555;
+}
