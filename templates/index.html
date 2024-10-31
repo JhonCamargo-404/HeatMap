@@ -49,12 +49,17 @@
         
         {% if heatmap %}
             <!-- Muestra el mapa de calor embebido en un contenedor bien definido -->
-            <iframe src="{{ url_for('uploaded_file', filename='heatmap.html') }}"></iframe>
+            <iframe src="{{ url_for('uploaded_file', filename='heatmap.html') }}" width="100%" height="500px"></iframe>
         {% else %}
             <p class="message">Sube un archivo CSV para generar el mapa de calor.</p>
         {% endif %}
-        <iframe title="visualizacion" width="600" height="373.5" src="https://app.powerbi.com/view?r=eyJrIjoiOWU2YWNlY2EtYjQxNi00NWY3LTk3YTAtMWNkYTJiMDUxODcxIiwidCI6IjAzZTFiMjI2LTU3ODktNGE5Ny05MGY2LTQ0YTQ0MjQxYmE2ZCIsImMiOjR9" frameborder="0" allowFullScreen="true"></iframe>
-
+        
+        {% if line_chart %}
+        <h2>Gráfico de Línea de Incidentes por Hora</h2>
+        <img src="{{ url_for('uploaded_file', filename='line_chart.png') }}" alt="Gráfico de Incidentes por Hora" width="100%">
+        {% endif %}
+    
+        
     </div>
 </body>
 </html>

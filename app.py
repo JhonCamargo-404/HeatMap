@@ -3,6 +3,9 @@ import pandas as pd
 import folium
 from folium.plugins import HeatMap
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+import matplotlib
+matplotlib.use('Agg')  # Usar backend 'Agg' para evitar problemas de hilos
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -79,11 +82,14 @@ def filter_heatmap():
     # Generar el mapa de calor filtrado
     generate_heatmap(data_filtered, "heatmap.html")
     
-    # Actualizar las listas de barrios y diseños, y el título dinámico
+    # Generar el gráfico de línea filtrado
+    generate_line_chart(data_filtered, "line_chart.png")
+    
     barrios = sorted(data['barrio'].dropna().unique())
     disenos = sorted(data['diseno'].dropna().unique())
     title = f"Mapa de Calor de Accidentes - {selected_barrio if selected_barrio != 'todos' else 'Todos los Barrios'} - {selected_time_interval} - {selected_diseno if selected_diseno != 'todos' else 'Todos los Diseños'}"
-    return render_template('index.html', barrios=barrios, disenos=disenos, time_intervals=time_intervals.keys(), heatmap=True, title=title, selected_barrio=selected_barrio, selected_time_interval=selected_time_interval, selected_diseno=selected_diseno)
+    
+    return render_template('index.html', barrios=barrios, disenos=disenos, time_intervals=time_intervals.keys(), heatmap=True, title=title, selected_barrio=selected_barrio, selected_time_interval=selected_time_interval, selected_diseno=selected_diseno, line_chart=True)
 
 def generate_heatmap(dataframe, filename):
     # Filtrar las coordenadas y crear el mapa de calor
@@ -97,6 +103,26 @@ def generate_heatmap(dataframe, filename):
     # Guardar el mapa en un archivo HTML para incrustarlo en la página
     heatmap_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     mapa_medellin.save(heatmap_path)
+
+def generate_line_chart(dataframe, filename):
+    # Agrupar los datos por hora y contar incidentes
+    hour_counts = dataframe.groupby('hora').size()
+
+    # Configuración de la figura
+    plt.figure(figsize=(12, 8))  # Aumentar tamaño de la figura
+    hour_counts.plot(kind='line', marker='o', color='b', linewidth=2, markersize=6)
+
+    # Ajustar el título y etiquetas
+    plt.xlabel('Hora', fontsize=14)
+    plt.ylabel('Cantidad de Incidentes', fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.grid(True)
+
+    # Guardar el gráfico como archivo en la carpeta de uploads
+    chart_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    plt.savefig(chart_path, bbox_inches='tight')  # bbox_inches='tight' asegura que el gráfico se ajuste bien
+    plt.close()
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
