@@ -44,14 +44,15 @@ def index():
             barrios = sorted(data['barrio'].dropna().unique())
             disenos = sorted(data['diseno'].dropna().unique())
             
-            # Generar el mapa de calor para toda la ciudad
+            # Generar el mapa de calor y el gráfico de líneas para toda la ciudad
             generate_heatmap(data, "heatmap.html")
+            generate_line_chart(data, "line_chart.png")
             
-            # Renderizar la página con el mapa de calor de toda la ciudad y las listas de barrios y diseños
-            return render_template('index.html', barrios=barrios, disenos=disenos, time_intervals=time_intervals.keys(), heatmap=True)
+            # Renderizar la página con el mapa de calor y el gráfico de líneas
+            return render_template('index.html', barrios=barrios, disenos=disenos, time_intervals=time_intervals.keys(), heatmap=True, line_chart=True)
     
     # Renderizar la página inicial
-    return render_template('index.html', barrios=barrios, disenos=disenos, time_intervals=time_intervals.keys(), heatmap=False)
+    return render_template('index.html', barrios=barrios, disenos=disenos, time_intervals=time_intervals.keys(), heatmap=False, line_chart=False)
 
 @app.route('/filter', methods=['POST'])
 def filter_heatmap():
