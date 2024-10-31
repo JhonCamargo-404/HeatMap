@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa de Calor de Accidentes - Medellín</title>
-    <!-- Enlace al archivo CSS externo -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -19,8 +18,8 @@
         </form>
         
         {% if barrios %}
-            <!-- Formulario para seleccionar el barrio y la jornada de horas -->
-            <form action="/filter" method="POST">
+            <!-- Formulario para seleccionar el barrio, la jornada de horas y el diseño de la vía -->
+            <form action="/filter" method="POST" style="margin-top: 20px;">
                 <label for="barrio">Selecciona un Barrio:</label>
                 <select name="barrio" id="barrio">
                     <option value="todos" {% if selected_barrio == "todos" %}selected{% endif %}>Todos</option>
@@ -29,12 +28,21 @@
                     {% endfor %}
                 </select>
 
-                <label for="time_interval">Selecciona Jornada:</label>
+                <label for="time_interval" style="margin-left: 10px;">Selecciona Jornada:</label>
                 <select name="time_interval" id="time_interval" required>
                     {% for interval in time_intervals %}
                         <option value="{{ interval }}" {% if selected_time_interval == interval %}selected{% endif %}>{{ interval }}</option>
                     {% endfor %}
                 </select>
+                
+                <label for="diseno" style="margin-left: 10px;">Selecciona Diseño de Vía:</label>
+                <select name="diseno" id="diseno">
+                    <option value="todos" {% if selected_diseno == "todos" %}selected{% endif %}>Todos</option>
+                    {% for diseno in disenos %}
+                        <option value="{{ diseno }}" {% if selected_diseno == diseno %}selected{% endif %}>{{ diseno }}</option>
+                    {% endfor %}
+                </select>
+                
                 <button type="submit">Generar Mapa de Calor</button>
             </form>
         {% endif %}
@@ -45,7 +53,8 @@
         {% else %}
             <p class="message">Sube un archivo CSV para generar el mapa de calor.</p>
         {% endif %}
+        <iframe title="visualizacion" width="600" height="373.5" src="https://app.powerbi.com/view?r=eyJrIjoiOWU2YWNlY2EtYjQxNi00NWY3LTk3YTAtMWNkYTJiMDUxODcxIiwidCI6IjAzZTFiMjI2LTU3ODktNGE5Ny05MGY2LTQ0YTQ0MjQxYmE2ZCIsImMiOjR9" frameborder="0" allowFullScreen="true"></iframe>
+
     </div>
-    <iframe title="visualizacion" width="600" height="373.5" src="https://app.powerbi.com/view?r=eyJrIjoiOWU2YWNlY2EtYjQxNi00NWY3LTk3YTAtMWNkYTJiMDUxODcxIiwidCI6IjAzZTFiMjI2LTU3ODktNGE5Ny05MGY2LTQ0YTQ0MjQxYmE2ZCIsImMiOjR9" frameborder="0" allowFullScreen="true"></iframe>    
 </body>
 </html>

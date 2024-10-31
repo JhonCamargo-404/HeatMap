@@ -13,6 +13,7 @@ data = None
 
 # Definir intervalos de horas
 time_intervals = {
+    "General (Todas las Horas)": (0, 24),
     "Madrugada (00:00-06:00)": (0, 6),
     "Mañana (06:00-12:00)": (6, 12),
     "Tarde (12:00-18:00)": (12, 18),
@@ -23,6 +24,7 @@ time_intervals = {
 def index():
     global data
     barrios = []
+    disenos = []
     
     if request.method == 'POST':
         # Procesar el archivo cargado
@@ -35,17 +37,18 @@ def index():
             data = pd.read_csv(filepath)
             data['hora'] = pd.to_datetime(data['hora'], format='%I:%M %p').dt.hour  # Convertir horas a formato de 24 horas
             
-            # Obtener la lista de barrios únicos
+            # Obtener la lista de barrios y diseños únicos
             barrios = sorted(data['barrio'].dropna().unique())
+            disenos = sorted(data['diseno'].dropna().unique())
             
             # Generar el mapa de calor para toda la ciudad
             generate_heatmap(data, "heatmap.html")
             
-            # Renderizar la página con el mapa de calor de toda la ciudad y la lista de barrios
-            return render_template('index.html', barrios=barrios, time_intervals=time_intervals.keys(), heatmap=True)
+            # Renderizar la página con el mapa de calor de toda la ciudad y las listas de barrios y diseños
+            return render_template('index.html', barrios=barrios, disenos=disenos, time_intervals=time_intervals.keys(), heatmap=True)
     
     # Renderizar la página inicial
-    return render_template('index.html', barrios=barrios, time_intervals=time_intervals.keys(), heatmap=False)
+    return render_template('index.html', barrios=barrios, disenos=disenos, time_intervals=time_intervals.keys(), heatmap=False)
 
 @app.route('/filter', methods=['POST'])
 def filter_heatmap():
@@ -53,9 +56,10 @@ def filter_heatmap():
     if data is None:
         return redirect(url_for('index'))
     
-    # Obtener el barrio y el intervalo de horas seleccionados
+    # Obtener el barrio, el intervalo de horas y el diseño de vía seleccionados
     selected_barrio = request.form.get('barrio')
     selected_time_interval = request.form.get('time_interval')
+    selected_diseno = request.form.get('diseno')
     
     # Filtrar por barrio
     if selected_barrio and selected_barrio != 'todos':
@@ -64,17 +68,22 @@ def filter_heatmap():
         data_filtered = data
     
     # Filtrar por intervalo de horas
-    if selected_time_interval:
+    if selected_time_interval and selected_time_interval != "General (Todas las Horas)":
         start_hour, end_hour = time_intervals[selected_time_interval]
         data_filtered = data_filtered[(data_filtered['hora'] >= start_hour) & (data_filtered['hora'] < end_hour)]
+    
+    # Filtrar por diseño de vía
+    if selected_diseno and selected_diseno != 'todos':
+        data_filtered = data_filtered[data_filtered['diseno'] == selected_diseno]
     
     # Generar el mapa de calor filtrado
     generate_heatmap(data_filtered, "heatmap.html")
     
-    # Actualizar la lista de barrios y el título dinámico
+    # Actualizar las listas de barrios y diseños, y el título dinámico
     barrios = sorted(data['barrio'].dropna().unique())
-    title = f"Mapa de Calor de Accidentes - {selected_barrio if selected_barrio != 'todos' else 'Todos los Barrios'} - {selected_time_interval}"
-    return render_template('index.html', barrios=barrios, time_intervals=time_intervals.keys(), heatmap=True, title=title, selected_barrio=selected_barrio, selected_time_interval=selected_time_interval)
+    disenos = sorted(data['diseno'].dropna().unique())
+    title = f"Mapa de Calor de Accidentes - {selected_barrio if selected_barrio != 'todos' else 'Todos los Barrios'} - {selected_time_interval} - {selected_diseno if selected_diseno != 'todos' else 'Todos los Diseños'}"
+    return render_template('index.html', barrios=barrios, disenos=disenos, time_intervals=time_intervals.keys(), heatmap=True, title=title, selected_barrio=selected_barrio, selected_time_interval=selected_time_interval, selected_diseno=selected_diseno)
 
 def generate_heatmap(dataframe, filename):
     # Filtrar las coordenadas y crear el mapa de calor
