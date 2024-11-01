@@ -9,9 +9,7 @@ matplotlib.use('Agg')  # Usar backend 'Agg' para evitar problemas de hilos
 import matplotlib.pyplot as plt
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
 app.config['CLEAN_FOLDER'] = os.path.join(os.getcwd(), 'fileClean')
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['CLEAN_FOLDER'], exist_ok=True)
 
 # Variable global para almacenar los datos del archivo cargado
@@ -36,14 +34,9 @@ def index():
         # Procesar el archivo cargado
         file = request.files['file']
         if file and file.filename.endswith('.csv'):
-            # Crear un nombre único para el archivo subido
-            filename = f"{int(time.time())}_{file.filename}"
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-            
-            # Leer y almacenar el archivo en la variable global `data`
-            data = pd.read_csv(filepath)
-            data['hora'] = pd.to_datetime(data['hora'], format='%I:%M %p').dt.hour  # Convertir horas a formato de 24 horas
+            # Leer el archivo directamente en la variable global `data` con codificación ISO-8859-1
+            data = pd.read_csv(file, encoding='ISO-8859-1')
+            data['hora'] = pd.to_datetime(data['hora'], format='mixed').dt.hour  # Convertir horas detectando formato automáticamente
 
             # Limpiar los datos
             data = clean_data(data)
@@ -185,7 +178,7 @@ def generate_heatmap(dataframe, filename):
     HeatMap(heat_data).add_to(mapa_medellin)
     
     # Guardar el mapa en un archivo HTML para incrustarlo en la página
-    heatmap_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    heatmap_path = os.path.join(app.config['CLEAN_FOLDER'], filename)
     mapa_medellin.save(heatmap_path)
 
 def generate_line_chart(dataframe, filename):
@@ -203,14 +196,14 @@ def generate_line_chart(dataframe, filename):
     plt.yticks(fontsize=12)
     plt.grid(True)
 
-    # Guardar el gráfico como archivo en la carpeta de uploads
-    chart_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    # Guardar el gráfico como archivo en la carpeta de fileClean
+    chart_path = os.path.join(app.config['CLEAN_FOLDER'], filename)
     plt.savefig(chart_path, bbox_inches='tight')  # bbox_inches='tight' asegura que el gráfico se ajuste bien
     plt.close()
 
-@app.route('/uploads/<filename>')
+@app.route('/fileClean/<filename>')
 def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    return send_from_directory(app.config['CLEAN_FOLDER'], filename)
 
 if __name__ == '__main__':
     app.run(debug=True)
