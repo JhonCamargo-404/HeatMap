@@ -1,0 +1,26 @@
+# Ignorar archivos de configuración y carpetas de trabajo
+uploads/
+fileClean/
+
+# Archivos de Python compilados
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Entornos virtuales
+venv/
+.env/
+.venv/
+
+# Configuración de entorno de Flask
+instance/
+.env
+
+# Archivos de registro y base de datos
+*.log
+*.sqlite3
+*.db
+
+# Archivos generados por el sistema operativo
+.DS_Store
+Thumbs.db

@@ -1,4 +1,5 @@
 import os
+import time
 import pandas as pd
 import folium
 from folium.plugins import HeatMap
@@ -8,8 +9,10 @@ matplotlib.use('Agg')  # Usar backend 'Agg' para evitar problemas de hilos
 import matplotlib.pyplot as plt
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
+app.config['CLEAN_FOLDER'] = os.path.join(os.getcwd(), 'fileClean')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config['CLEAN_FOLDER'], exist_ok=True)
 
 # Variable global para almacenar los datos del archivo cargado
 data = None
@@ -33,12 +36,25 @@ def index():
         # Procesar el archivo cargado
         file = request.files['file']
         if file and file.filename.endswith('.csv'):
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+            # Crear un nombre único para el archivo subido
+            filename = f"{int(time.time())}_{file.filename}"
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             
             # Leer y almacenar el archivo en la variable global `data`
             data = pd.read_csv(filepath)
             data['hora'] = pd.to_datetime(data['hora'], format='%I:%M %p').dt.hour  # Convertir horas a formato de 24 horas
+
+            # Limpiar los datos
+            data = clean_data(data)
+            
+            # Filtrar por el año más frecuente
+            data, dominant_year = filter_by_dominant_year(data)
+            
+            # Guardar el archivo limpio solo con el año en el nombre
+            clean_filename = f"{dominant_year}.csv"
+            clean_filepath = os.path.join(app.config['CLEAN_FOLDER'], clean_filename)
+            data.to_csv(clean_filepath, index=False, encoding='utf-8')
             
             # Obtener la lista de barrios y diseños únicos
             barrios = sorted(data['barrio'].dropna().unique())
@@ -53,6 +69,73 @@ def index():
     
     # Renderizar la página inicial
     return render_template('index.html', barrios=barrios, disenos=disenos, time_intervals=time_intervals.keys(), heatmap=False, line_chart=False)
+
+def clean_data(df):
+    # Diccionario de reemplazos
+    replacements = {
+        'DAÃ‘OS': 'DAÑOS',
+        'SÃBADO': 'SÁBADO',
+        'MIÃ‰RCOLES': 'MIÉRCOLES',
+        "ExpansiÃ³n": "Expansión",
+        "Ãrea": "Área",
+        "CristÃ³bal": "Cristóbal",
+        "AlejandrÃ­a": "Alejandría",
+        "EchavarrÃ­a": "Echavarría",
+        "SimÃ³n": "Simón",
+        "BolÃ­var": "Bolívar",
+        "MarÃ­a": "María",
+        "Ãngeles": "Ángeles",
+        "MÃ³nica": "Mónica",
+        "LucÃ­a": "Lucía",
+        "InÃ©s": "Inés",
+        "FÃ©": "Fé",
+        "MartÃ­n": "Martín",
+        "MontaÃ±a": "Montaña",
+        "LÃ³pez": "López",
+        "JosÃ©": "José",
+        "JoaquÃ­n": "Joaquín",
+        "GermÃ¡n": "Germán",
+        "BelÃ©n": "Belén",
+        "PlayÃ³n": "Playón",
+        "IguanÃ¡": "Iguaná",
+        "AburrÃ¡": "Aburrá",
+        "MoscÃº": "Moscú",
+        "AmÃ©rica": "América",
+        "AlcÃ¡zares": "Alcázares",
+        "MansiÃ³n": "Mansión",
+        "JesÃºs": "Jesús",
+        "PaÃºl": "Paúl",
+        "HÃ©ctor": "Héctor",
+        "GÃ³mez": "Gómez",
+        "FÃ¡tima": "Fátima",
+        "EstaciÃ³n": "Estación",
+        "VelÃ³dromo": "Velódromo",
+        "RincÃ³n": "Rincón",
+        "CorazÃ³n": "Corazón"
+    }
+    
+    # Aplicar reemplazos a todas las columnas de texto
+    for col in df.select_dtypes(include='object').columns:
+        df[col] = df[col].str.strip()  # Eliminar espacios adicionales
+        df[col] = df[col].replace(replacements, regex=True)
+    
+    return df
+
+def filter_by_dominant_year(df):
+    # Convertir la columna 'fecha' a tipo datetime y extraer el año
+    df['fecha'] = pd.to_datetime(df['fecha'], errors='coerce')
+    df['año'] = df['fecha'].dt.year
+    
+    # Calcular la moda del año
+    dominant_year = df['año'].mode()[0]
+    
+    # Filtrar el DataFrame por el año dominante
+    df = df[df['año'] == dominant_year]
+    
+    # Eliminar la columna auxiliar 'año' antes de devolver el DataFrame
+    df = df.drop(columns=['año'])
+    
+    return df, dominant_year
 
 @app.route('/filter', methods=['POST'])
 def filter_heatmap():
