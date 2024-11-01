@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <h1>Indicentes Vehiculares en la ciudad de Medellín</h1>
+    <h1>Incidentes Vehiculares en la ciudad de Medellín</h1>
     <div class="container">
         <h2>{{ title if title else 'Accidentes en Medellín' }}</h2>
         
@@ -19,7 +19,7 @@
         </form>
         
         {% if barrios %}
-            <!-- Formulario para seleccionar el barrio, la jornada de horas y el diseño de la vía -->
+            <!-- Formulario para seleccionar el barrio, la jornada de horas, el diseño de la vía y el periodo -->
             <form action="/filter" method="POST" style="margin-top: 20px;">
                 <label for="barrio">Selecciona un Barrio:</label>
                 <select name="barrio" id="barrio">
@@ -43,6 +43,14 @@
                         <option value="{{ diseno }}" {% if selected_diseno == diseno %}selected{% endif %}>{{ diseno }}</option>
                     {% endfor %}
                 </select>
+
+                <label for="periodo" style="margin-left: 10px;">Selecciona Año:</label>
+                <select name="periodo" id="periodo">
+                    <option value="todos" {% if selected_periodo == "todos" %}selected{% endif %}>Todos</option>
+                    {% for periodo in periodos %}
+                        <option value="{{ periodo }}" {% if selected_periodo == periodo %}selected{% endif %}>{{ periodo }}</option>
+                    {% endfor %}
+                </select>
                 
                 <button type="submit">Cargar Filtros</button>
             </form>
@@ -52,14 +60,15 @@
             <!-- Muestra el mapa de calor embebido en un contenedor bien definido -->
             <iframe src="{{ url_for('uploaded_file', filename='heatmap.html') }}" width="100%" height="500px"></iframe>
         {% else %}
-            <p class="message">Sube un archivo CSV para generar los graficos.</p>
+            <p class="message">Sube un archivo CSV para generar los gráficos.</p>
         {% endif %}
         
         {% if line_chart %}
         <h2>Gráfico de Línea de Incidentes por Hora</h2>
         <img src="{{ url_for('uploaded_file', filename='line_chart.png') }}" alt="Gráfico de Incidentes por Hora" width="100%">
         {% endif %}
-        <iframe title="visualizacion  sura" width="600" height="373.5" src="https://app.powerbi.com/view?r=eyJrIjoiODY2OTVhOGMtOGI3MC00NzY1LWIyZTgtOGI2OGJiNDI3NmExIiwidCI6IjAzZTFiMjI2LTU3ODktNGE5Ny05MGY2LTQ0YTQ0MjQxYmE2ZCIsImMiOjR9" frameborder="0" allowFullScreen="true"></iframe>
+        
+        <iframe title="visualizacion sura" width="600" height="373.5" src="https://app.powerbi.com/view?r=eyJrIjoiODY2OTVhOGMtOGI3MC00NzY1LWIyZTgtOGI2OGJiNDI3NmExIiwidCI6IjAzZTFiMjI2LTU3ODktNGE5Ny05MGY2LTQ0YTQ0MjQxYmE2ZCIsImMiOjR9" frameborder="0" allowFullScreen="true"></iframe>
     </div>
 </body>
 </html>
