@@ -7,8 +7,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+    <h1>Indicentes Vehiculares en la ciudad de Medellín</h1>
     <div class="container">
-        <h1>{{ title if title else 'Generador de Mapa de Calor de Accidentes en Medellín' }}</h1>
+        <h2>{{ title if title else 'Accidentes en Medellín' }}</h2>
         
         <!-- Formulario para cargar el archivo -->
         <form action="/" method="POST" enctype="multipart/form-data">
@@ -43,7 +44,7 @@
                     {% endfor %}
                 </select>
                 
-                <button type="submit">Generar Mapa de Calor</button>
+                <button type="submit">Cargar Filtros</button>
             </form>
         {% endif %}
         
@@ -51,7 +52,7 @@
             <!-- Muestra el mapa de calor embebido en un contenedor bien definido -->
             <iframe src="{{ url_for('uploaded_file', filename='heatmap.html') }}" width="100%" height="500px"></iframe>
         {% else %}
-            <p class="message">Sube un archivo CSV para generar el mapa de calor.</p>
+            <p class="message">Sube un archivo CSV para generar los graficos.</p>
         {% endif %}
         
         {% if line_chart %}
